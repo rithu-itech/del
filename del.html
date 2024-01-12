@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking appointment App</title>
+</head>
+<body>
+    <h2>User Details</h2>
+    <div class="container" id="forms">
+        <form onsubmit="saveToLocalStorage(event)">
+            <label>Name</label>
+            <input type="text" name="username" id="usernameInputTag" required/>
+            <label>Email ID</label>
+            <input type="email" name="emailId" id="emailInputTag" required/>
+            <label>Phone Number</label>
+            <input type="tel" name="phonenumber" id="phonenumberInputTag"/>
+            <button>Submit</button>
+        </form>
+    </div>
+    <ul id="listOfItems"></ul>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.2/axios.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            axios.get("https://crudcrud.com/api/6c4223f89e404ce9a9266c8b153f03a2/AppoinmentData")
+                .then((response) => {
+                    const userList = response.data || [];
+                    userList.forEach((user) => {
+                        showOnUserScreen(user);
+                    });
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+        });
+
+        function saveToLocalStorage(event) {
+            event.preventDefault();
+            const email = event.target.emailId.value;
+            const name = event.target.username.value;
+            const phonenumber = event.target.phonenumber.value;
+            const newUser = {
+                name,
+                email,
+                phonenumber
+            };
+
+            axios.post("https://crudcrud.com/api/6c4223f89e404ce9a9266c8b153f03a2/AppoinmentData", newUser)
+                .then((response) => {
+                    showOnUserScreen(response.data);
+                })
+                .catch((err) => {
+                    document.body.innerHTML += "<h3>Something Went Wrong</h3>";
+                    console.log(err);
+                });
+
+            event.target.username.value = '';
+            event.target.emailId.value = '';
+            event.target.phonenumber.value = '';
+        }
+
+        function showOnUserScreen(newUser) {
+            const parentElmt = document.getElementById('listOfItems');
+            const childElmt = document.createElement('li');
+            childElmt.textContent = `${newUser.name} - ${newUser.email} - ${newUser.phonenumber}`;
+
+            // delete icon
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'Delete';
+            delBtn.onclick = () => {
+                deleteUser(newUser._id, childElmt);
+            };
+
+            // edit icon
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edit';
+            editBtn.onclick = () => {
+                editUser(newUser, childElmt);
+            };
+
+            childElmt.appendChild(delBtn);
+            childElmt.appendChild(editBtn);
+            parentElmt.appendChild(childElmt);
+        }
+
+        function deleteUser(userId, elementToRemove) {
+            axios.delete(`https://crudcrud.com/api/6c4223f89e404ce9a9266c8b153f03a2/AppoinmentData/${userId}`)
+                .then(() => {
+                    const parentElmt = document.getElementById('listOfItems');
+                    parentElmt.removeChild(elementToRemove);
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+        }
+
+        function editUser(user, elementToUpdate) {
+            const EditBtn = document.createElement('button');
+            EditBtn.textContent = 'Edit';
+            EditBtn.onclick = () => {
+         
+                document.getElementById('usernameInputTag').value = user.name;
+                document.getElementById('emailInputTag').value = user.email;
+                document.getElementById('phonenumberInputTag').value = user.phonenumber;
+
+                
+            };
+
+            elementToUpdate.appendChild(EditBtn);
+        }
+    </script>
+</body>
+</html>
